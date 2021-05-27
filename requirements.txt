@@ -1,0 +1,14 @@
+pylint
+autopep8
+pandas~=1.2.4
+numpy~=1.20.1
+requests~=2.25.1
+pyyaml~=5.4.1
+python-dateutil~=2.8.1
+pytest
+pytest-cov
+setuptools~=52.0.0
+yaml~=0.2.5
+plotly~=4.14.3
+mysql-connector-python~=8.0.24
+dash~=1.19.0
