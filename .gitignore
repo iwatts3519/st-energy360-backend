@@ -2,3 +2,7 @@
 /tim_client.egg-info/
 /build/
 /dist/
+/sample_notebooks_latest/
+/tim_client/
+/.ipynb_checkpoints/
+/tim_client/

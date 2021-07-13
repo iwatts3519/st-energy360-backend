@@ -8,36 +8,36 @@ import dash_auth
 from app import app
 from app import server
 
+from apps import welcome, keele_forecast
+
 auth = dash_auth.BasicAuth(app, {'iwatts': 'secret'})
 
-from apps import welcome, solar_forecast
-
 app.layout = html.Div([
-
-    dcc.Location(id="url", refresh=False, pathname="/apps/welcome"),
 
     dbc.Row([
         dbc.Col([
             dbc.NavbarSimple([
+
                 dbc.NavItem([
-                    dbc.Button(dbc.NavLink("Solar Forecast ", href='/apps/solar_forecast'), className="lg mx-2",
+                    dbc.Button(dcc.Link("Keele Forecast ", href='/apps/keele_forecast', style={'color': 'white'}),
+                               className="lg mx-2",
                                color="primary")
                 ])
             ],
-                brand="RAFA Analytics",
-                brand_href="welcome.layout",
+                brand="Rafa Analytics",
+                brand_href="/apps/welcome",
                 fluid=True,
                 dark=True,
                 color="primary")
         ], width=12)
     ]),
 
-
+    dcc.Location(id="url", refresh=False, pathname="/apps/welcome"),
     html.Div(id='page-content', children=[]),
     dbc.Row(
         dbc.Col(
-            html.Div("(c) CAD Group 6 - Keele University -  Built by Dash on Flask",
-                     style={"text-align": "center"}))
+            html.Div("(c) 2021 Reliable Insights & Keele University SEND -  Built by Dash on Flask",
+                     style={"text-align": "center"}), className='footer')
     )
 ])
 
@@ -45,13 +45,10 @@ app.layout = html.Div([
 @app.callback(Output('page-content', 'children'),
               [Input('url', 'pathname')])
 def display_page(pathname):
-    print("Function Running")
     if pathname == '/apps/welcome':
-        print('welcome')
         return welcome.layout
-    if pathname == '/apps/solar_forecast':
-        print('forecast')
-        return solar_forecast.layout
+    if pathname == '/apps/keele_forecast':
+        return keele_forecast.layout
     else:
         return "404 Page Error! Please choose a link"
 
