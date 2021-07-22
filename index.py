@@ -11,22 +11,28 @@ from app import server
 from apps import welcome, keele_forecast
 
 auth = dash_auth.BasicAuth(app, {'iwatts': 'secret'})
-
 app.layout = html.Div([
 
     dbc.Row([
         dbc.Col([
-            dbc.NavbarSimple([
-
+            dbc.Navbar([
+                html.A(
+                    dbc.Row(
+                        [
+                            dbc.Col(html.Img(src=app.get_asset_url('st-energy.png'), height='40px')),
+                            dbc.Col(dbc.NavbarBrand('Analytics Platform', className='ml-2'))
+                        ],
+                        align='center',
+                        no_gutters=True
+                    ),
+                    href='/apps/welcome'
+                ),
                 dbc.NavItem([
                     dbc.Button(dcc.Link("Keele Forecast ", href='/apps/keele_forecast', style={'color': 'white'}),
                                className="lg mx-2",
                                color="primary")
                 ])
             ],
-                brand="Rafa Analytics",
-                brand_href="/apps/welcome",
-                fluid=True,
                 dark=True,
                 color="primary")
         ], width=12)
@@ -36,8 +42,13 @@ app.layout = html.Div([
     html.Div(id='page-content', children=[]),
     dbc.Row(
         dbc.Col(
-            html.Div("(c) 2021 Reliable Insights & Keele University SEND -  Built by Dash on Flask",
-                     style={"text-align": "center"}), className='footer')
+            [
+                html.Div(
+                    html.Img(src=app.get_asset_url('bottom_header.png'), height="100px"),
+                    style={"text-align": "center"}),
+                html.Div("(c) 2021 ST Energy 360 & Keele University SEND -  Built by Dash on Flask",
+                         style={"text-align": "center"})
+            ], className='footer')
     )
 ])
 

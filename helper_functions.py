@@ -10,6 +10,28 @@ import sqlite3
 backtest = 0
 
 
+def generate_full_historical():
+    solcast_df = pd.read_csv('Data/Solcast_Historical.csv',
+                             sep=',',
+                             usecols=[1, 3, 4, 5, 6, 7, 8, 9],
+                             header=0,
+                             names=['timestamp', 'Temp', 'SA', 'CO', 'DHI', 'DNI', 'GHI', 'SZ'],
+                             parse_dates=['timestamp'])
+
+    solcast_cols = ['timestamp', 'GHI', 'DNI', 'DHI', 'SA', 'SZ', 'CO', 'Temp']
+    solcast_df = solcast_df.reindex(solcast_cols, axis=1)
+    solcast_df = solcast_df[solcast_df['timestamp'].dt.month != 8]
+    solcast_df['timestamp'] = pd.to_datetime(solcast_df['timestamp'], utc=True)
+    historical_predictions_df = pd.read_csv('./Data/historical_predictions.csv')
+    historical_predictions_df = clean_solcast_data(historical_predictions_df)
+    historical_predictions_df.drop('PV_obs', axis=1, inplace=True)
+    historical_predictions_df['timestamp'] = pd.to_datetime(historical_predictions_df['timestamp'], utc=True)
+    test_merge_df = pd.concat([solcast_df, historical_predictions_df], ignore_index=True)
+    test_merge_df.drop_duplicates(subset='timestamp', keep='last', inplace=True, ignore_index=True)
+    test_merge_df.to_csv('./Data/MainHistorical.csv', sep=',', index=False)
+    return test_merge_df
+
+
 def get_missing_index(df):
     missing = pd.isna(df.PV_obs)
     end = len(df)
@@ -25,23 +47,31 @@ def get_missing_index(df):
             if check == 0:
                 start = i
                 check = 1
+    print(f'Start is {start}')
+    print(f'End is {end}')
+    print(f'End minus Start is {end - start}')
     return end, end - start
 
 
-def add_solcast_historical(df):
-    solcast_df = pd.read_csv('Data/Solcast_Historical.csv',
-                             sep=',',
-                             usecols=[1, 3, 4, 5, 6, 7, 8, 9],
-                             header=0,
-                             names=['timestamp', 'Temp', 'SA', 'CO', 'DHI', 'DNI', 'GHI', 'SZ'],
-                             parse_dates=['timestamp'])
+def add_solcast_historical(df, update_historical):
+    if update_historical:
+        solcast_df = pd.read_csv('Data/Solcast_Historical.csv',
+                                 sep=',',
+                                 usecols=[1, 3, 4, 5, 6, 7, 8, 9],
+                                 header=0,
+                                 names=['timestamp', 'Temp', 'SA', 'CO', 'DHI', 'DNI', 'GHI', 'SZ'],
+                                 parse_dates=['timestamp'])
 
-    solcast_cols = ['timestamp', 'GHI', 'DNI', 'DHI', 'SA', 'SZ', 'CO', 'Temp']
-    solcast_df = solcast_df.reindex(solcast_cols, axis=1)
-    solcast_df = solcast_df[solcast_df['timestamp'].dt.month != 8]
-    solcast_df['timestamp'] = pd.to_datetime(solcast_df['timestamp'], utc=True)
+        solcast_cols = ['timestamp', 'GHI', 'DNI', 'DHI', 'SA', 'SZ', 'CO', 'Temp']
+        solcast_df = solcast_df.reindex(solcast_cols, axis=1)
+        solcast_df = solcast_df[solcast_df['timestamp'].dt.month != 8]
+        solcast_df['timestamp'] = pd.to_datetime(solcast_df['timestamp'], utc=True)
+    else:
+        solcast_df = pd.read_csv('./Data/MainHistorical.csv',
+                                 sep=',')
+        solcast_df['timestamp'] = pd.to_datetime(solcast_df['timestamp'], utc=True)
     df['timestamp'] = pd.to_datetime(df['timestamp'], utc=True)
-    solcast_historical_df = solcast_df.merge(df, on='timestamp', how='inner', indicator=True)
+    solcast_historical_df = df.merge(solcast_df, on='timestamp', how='left', indicator=True)
 
     solcast_historical_df = solcast_historical_df.reindex(
         ['timestamp', 'PV_obs', 'GHI', 'DNI', 'DHI', 'SA', 'SZ', 'CO', 'Temp'],
@@ -65,6 +95,8 @@ def get_solcast_forecast():
     else:
         print("Using Existing Data")
         forecast_df = pd.read_csv('./Data/new_forecast.csv', sep=',')
+    df_old.to_csv('./DATA/df_old.csv', sep=',', index=False)
+    forecast_df.to_csv('./DATA/forecast_df.csv', sep=',', index=False)
     df_new = pd.concat([df_old, forecast_df], ignore_index=True)
     df_new.drop_duplicates(subset='period_end', keep='last', inplace=True, ignore_index=True)
     df_new.to_csv('./Data/historical_predictions.csv', sep=',', index=False)
@@ -90,18 +122,21 @@ def merge_data_frames(df1, df2):
     return new_df
 
 
-def process_missing_values(df, df_len):
+def process_missing_values(df):
+    df_len = len(df)
     end, prediction = get_missing_index(df)
     if end == df_len:
         return df, True
     short_df = df[:end]
-    model_df = build_model(short_df, False)
+    model_df = build_model(short_df, False, short_df['PV_obs'].isna().sum())
+
     updated_df = merge_data_frames(df, model_df)
     return updated_df, False
 
 
-def build_model(df, indicator):
+def build_model(df, indicator, md_h):
     backnum = int(len(df) * .4)
+    md_h = int(md_h)
     # --------------------------------------------------------
     with open('credentials.json') as f:
         credentials_json = json.load(f)  # loading the credentials from credentials.json
@@ -128,38 +163,40 @@ def build_model(df, indicator):
         "usage": {
             "predictionTo": {
                 "baseUnit": "Sample",
-                "offset": 168
+                "offset": md_h
             },
-            "backtestLength": backnum,
-            "modelQuality": [{'day': i, 'quality': 'Automatic'} for i in range(0, 8)]
+            "backtestLength": backnum
+            # "modelQuality": [{'day': i, 'quality': 'Automatic'} for i in range(0, 8)]
         },
-        "dataNormalization": True,
-        "features": [
-            "Polynomial",
-            "TimeOffsets",
-            "PiecewiseLinear",
-            "Intercept",
-            "PeriodicComponents",
-            "DayOfWeek",
-            "MovingAverage"
-        ],
-        "maxModelComplexity": 50,
-        "timeSpecificModels": True,
-        "allowOffsets": False,
-        "memoryPreprocessing": True,
-        "interpolation": {
-            "type": "Linear",
-            "maxLength": 1
-        },
+        # "dataNormalization": True,
+        # "features": [
+        #     "Polynomial",
+        #     "TimeOffsets",
+        #     "PiecewiseLinear",
+        #     "Intercept",
+        #     "PeriodicComponents",
+        #     "DayOfWeek",
+        #     "MovingAverage"
+        # ],
+        # "maxModelComplexity": 90,
+        # "timeSpecificModels": True,
+        # "allowOffsets": True,
+        # "memoryPreprocessing": True,
+        # "interpolation": {
+        #     "type": "Linear",
+        #     "maxLength": 6
+        # },
         "predictionIntervals": {
-            "confidenceLevel": 90
+            "confidenceLevel": 70
         },
         "extendedOutputConfiguration": {
             "returnSimpleImportances": True,
             "returnExtendedImportances": True,
             'returnAggregatedPredictions': True,
             "predictionBoundaries": {
-                "type": "None"
+                "type": "Explicit",
+                "maxValue": 100,
+                "minValue": 0
             }
         }
     }
@@ -170,15 +207,15 @@ def build_model(df, indicator):
     print(f'It took {end - start} seconds to build model')
     if not indicator:
         df = model.prediction.reset_index()
-        print('***** DataFrame of Model Build *****')
+        # print('***** DataFrame of Model Build *****')
         df.columns = ['timestamp', 'PV_obs']
-        print(df)
+        # print(df)
         return df
     else:
         df = model.prediction.reset_index()
-        print('***** DataFrame of Model Build *****')
+        # print('***** DataFrame of Model Build *****')
         df.columns = ['timestamp', 'PV_obs']
-        print(df)
+        # print(df)
         df.to_csv('./Data/CompleteHistorical.csv')
         return model
 
@@ -193,5 +230,5 @@ def clean_solcast_data(df):
     df['timestamp'] = df['timestamp'].astype('datetime64[ns]')
     df = df[df['timestamp'].dt.minute == 0]
     df = df.reset_index(drop=True)
-    df['timestamp'] = pd.to_datetime(df['timestamp'], utc=False)
+    df['timestamp'] = pd.to_datetime(df['timestamp'], utc=False).dt.tz_localize(None)
     return df
