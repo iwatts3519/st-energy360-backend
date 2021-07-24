@@ -12,7 +12,6 @@ keele_df = pd.read_csv('./Data/Keele_data.csv',
 keele_df['timestamp'] = pd.date_range(start=keele_df['timestamp'][0], periods=len(keele_df), freq='H')
 keele_df_ah = hf.add_solcast_historical(keele_df, False)
 keele_df_ah['timestamp'] = pd.to_datetime(keele_df_ah['timestamp'], utc=True).dt.tz_localize(None)
-# test_merge = hf.generate_full_historical()
 keele_df_pmv = keele_df_ah
 while True:
     keele_df_pmv, indicator = hf.process_missing_values(keele_df_pmv)
@@ -20,7 +19,7 @@ while True:
         break
 
 forecast_df = hf.get_solcast_forecast()
-# hf.generate_full_historical()
+hf.generate_full_historical()
 complete_df = pd.concat([keele_df_pmv, forecast_df], ignore_index=True)
 complete_df.drop_duplicates(subset='timestamp', keep='first', inplace=True, ignore_index=True)
 complete_df['PV_obs'] = round(complete_df['PV_obs'], 1)

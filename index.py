@@ -27,11 +27,13 @@ app.layout = html.Div([
                     ),
                     href='/apps/welcome'
                 ),
-                dbc.NavItem([
-                    dbc.Button(dcc.Link("Keele Forecast ", href='/apps/keele_forecast', style={'color': 'white'}),
-                               className="lg mx-2",
-                               color="primary")
-                ])
+                dbc.Button([
+                    dcc.Link("Keele Forecast ",
+                             href='/apps/keele_forecast',
+                             style={'color': 'white'}),
+
+                ], className="lg mx-2",
+                    color="primary")
             ],
                 dark=True,
                 color="primary")

@@ -20,7 +20,6 @@ def generate_full_historical():
 
     solcast_cols = ['timestamp', 'GHI', 'DNI', 'DHI', 'SA', 'SZ', 'CO', 'Temp']
     solcast_df = solcast_df.reindex(solcast_cols, axis=1)
-    solcast_df = solcast_df[solcast_df['timestamp'].dt.month != 8]
     solcast_df['timestamp'] = pd.to_datetime(solcast_df['timestamp'], utc=True)
     historical_predictions_df = pd.read_csv('./Data/historical_predictions.csv')
     historical_predictions_df = clean_solcast_data(historical_predictions_df)
@@ -64,7 +63,7 @@ def add_solcast_historical(df, update_historical):
 
         solcast_cols = ['timestamp', 'GHI', 'DNI', 'DHI', 'SA', 'SZ', 'CO', 'Temp']
         solcast_df = solcast_df.reindex(solcast_cols, axis=1)
-        solcast_df = solcast_df[solcast_df['timestamp'].dt.month != 8]
+        # solcast_df = solcast_df[solcast_df['timestamp'].dt.month != 8]
         solcast_df['timestamp'] = pd.to_datetime(solcast_df['timestamp'], utc=True)
     else:
         solcast_df = pd.read_csv('./Data/MainHistorical.csv',
@@ -166,9 +165,9 @@ def build_model(df, indicator, md_h):
                 "offset": md_h
             },
             "backtestLength": backnum
-            # "modelQuality": [{'day': i, 'quality': 'Automatic'} for i in range(0, 8)]
+            # "modelQuality": [{'day': i, 'quality': 'Automatic'} for i in range(0, 6)]
         },
-        # "dataNormalization": True,
+        "dataNormalization": False,
         # "features": [
         #     "Polynomial",
         #     "TimeOffsets",
@@ -178,16 +177,16 @@ def build_model(df, indicator, md_h):
         #     "DayOfWeek",
         #     "MovingAverage"
         # ],
-        # "maxModelComplexity": 90,
-        # "timeSpecificModels": True,
-        # "allowOffsets": True,
-        # "memoryPreprocessing": True,
-        # "interpolation": {
-        #     "type": "Linear",
-        #     "maxLength": 6
-        # },
+        "maxModelComplexity": 50,
+        "timeSpecificModels": True,
+        "allowOffsets": True,
+        "memoryPreprocessing": True,
+        "interpolation": {
+            "type": "Linear",
+            "maxLength": 6
+        },
         "predictionIntervals": {
-            "confidenceLevel": 70
+            "confidenceLevel": 90
         },
         "extendedOutputConfiguration": {
             "returnSimpleImportances": True,
