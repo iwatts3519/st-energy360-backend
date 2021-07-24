@@ -63,7 +63,6 @@ def add_solcast_historical(df, update_historical):
 
         solcast_cols = ['timestamp', 'GHI', 'DNI', 'DHI', 'SA', 'SZ', 'CO', 'Temp']
         solcast_df = solcast_df.reindex(solcast_cols, axis=1)
-        # solcast_df = solcast_df[solcast_df['timestamp'].dt.month != 8]
         solcast_df['timestamp'] = pd.to_datetime(solcast_df['timestamp'], utc=True)
     else:
         solcast_df = pd.read_csv('./Data/MainHistorical.csv',
@@ -206,16 +205,9 @@ def build_model(df, indicator, md_h):
     print(f'It took {end - start} seconds to build model')
     if not indicator:
         df = model.prediction.reset_index()
-        # print('***** DataFrame of Model Build *****')
         df.columns = ['timestamp', 'PV_obs']
-        # print(df)
         return df
     else:
-        df = model.prediction.reset_index()
-        # print('***** DataFrame of Model Build *****')
-        df.columns = ['timestamp', 'PV_obs']
-        # print(df)
-        df.to_csv('./Data/CompleteHistorical.csv')
         return model
 
 
