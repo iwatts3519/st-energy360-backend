@@ -5,38 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="d334543b-308a-4274-aad8-5c62f155cfd6" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/RAFA2.iml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Data/historical_forecast.csv" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/.gitignore" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/RAFA.iml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/other.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/other.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/TopHeader.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/bottom_header.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/st-energy.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/sticky_footer.css" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Data/Complete_Df.csv" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Data/DEOP IW.postman_collection.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Data/Keele_data.csv" beforeDir="false" afterPath="$PROJECT_DIR$/Data/Keele_data.csv" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Data/MainHistorical.csv" beforeDir="false" afterPath="$PROJECT_DIR$/Data/MainHistorical.csv" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Data/df_old.csv" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Data/forecast_df.csv" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Data/historical_predictions.csv" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Data/new_forecast.csv" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/SingleAssetSolarProduction.ipynb" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/app.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/__init__.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/keele_forecast.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/welcome.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/environment.yml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/helper_functions.py" beforeDir="false" afterPath="$PROJECT_DIR$/helper_functions.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/index.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/iw_model_trial.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/keele_data.py" beforeDir="false" afterPath="$PROJECT_DIR$/keele_data.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -60,6 +30,9 @@
         <entry key="FLASK_APP" value="app" />
       </map>
     </option>
+  </component>
+  <component name="Git.Rebase.Settings">
+    <option name="NEW_BASE" value="origin/main" />
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -174,6 +147,9 @@
       <module name="RAFA2" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
       <option name="SDK_HOME" value="" />
       <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
       <option name="IS_MODULE_SDK" value="true" />
@@ -251,7 +227,19 @@
       <map>
         <entry key="MAIN">
           <value>
-            <State />
+            <State>
+              <option name="FILTERS">
+                <map>
+                  <entry key="branch">
+                    <value>
+                      <list>
+                        <option value="origin/main" />
+                      </list>
+                    </value>
+                  </entry>
+                </map>
+              </option>
+            </State>
           </value>
         </entry>
       </map>
