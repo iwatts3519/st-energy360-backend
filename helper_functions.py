@@ -7,11 +7,17 @@ import tim_client
 from datetime import datetime, timedelta
 
 
+# This function gets the latest (n) days worth of data from the DEOPS system at Keele
 def get_deops(n):
+    # These two lines get the current date-time as a string, and the date-time n days ago
     now = datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ")
     n_days_past = (datetime.now() - timedelta(days=n)).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+    # Using the above variables log into  DEOPS and retrieve the data
     auth123 = ('iwatts', 'Iwatts371!')
     headers = {'sp': 'energykit', 'apikey': '45d8296f-aca7-46e7-888d-bd87f6e8e150'}
+    # This while loop is necessary because my home network is having DNS errors - it usually works on the second try
+    # but not the first
     while True:
         try:
             deops = requests.get(
@@ -21,22 +27,32 @@ def get_deops(n):
             break
         except:
             continue
+            # The data is returned in json format and then the values part of the json file is converted into a
+            # dataframe
     values = deops.json()
     df = pd.DataFrame(values['data'])
+    # Ensure the dataframe has the correct date-time format
     df['timestamp'] = pd.to_datetime(df['timestamp'], utc=True)
+    # Select only the columns of interest
     df = df[['timestamp', 'value']]
+    # The api version of DEOPS returns Watts where as the CSV download used to create the historical data and used
+    # elsewhere returns Kilowatts - hence the conversion
     df.value = df.value / 1000
+    # Rename the columns to match other data frames used within the app
     df.rename(columns={'value': 'PV_obs'}, inplace=True)
+    # Filter the dataframe to only use occurences on the hour as DEOPS gives data at 15 minute intervals
     df = df[df['timestamp'].dt.minute == 0]
-    df.to_csv('./Data/deops.csv', index=False)
     return df
 
 
 def get_solcast_forecast():
+    # Read in the current set of historical forecasts
     df_old = pd.read_csv('Data/historical_forecast.csv', sep=',')
-
+    # Log into solcast and get
     creds = {'api_key': '1h3MqOk4r2Vb2X_9uexzYFkUVWzBHz6w'}
     solcast_url = 'https://api.solcast.com.au/weather_sites/9d7c-6430-2d41-5c4b/forecasts?format=json'
+    # This while loop is necessary because my home network is having DNS errors - it usually works on the second try
+    # but not the first
     while True:
         try:
             response = requests.get(solcast_url, params=creds)
@@ -89,6 +105,8 @@ def build_model(df, indicator, md_h):
     logging.basicConfig(level=level,
                         format='[%(levelname)s] %(asctime)s - %(name)s:%(funcName)s:%(lineno)s - %(message)s')
     logger = logging.getLogger(__name__)
+    # This while loop is necessary because my home network is having DNS errors - it usually works on the second try
+    # but not the first
     while True:
         try:
             credentials = tim_client.Credentials(credentials_json['license_key'], credentials_json['email'],
@@ -119,7 +137,8 @@ def build_model(df, indicator, md_h):
             'returnAggregatedPredictions': True
         },
     }
-
+    # This while loop is necessary because my home network is having DNS errors - it usually works on the second try
+    # but not the first
     while True:
         try:
             model = api_client.prediction_build_model_predict(df, configuration_backtest)
