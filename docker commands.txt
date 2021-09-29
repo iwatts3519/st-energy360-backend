@@ -1,0 +1,8 @@
+docker build -t rafa-app .
+az login
+az acr login --name mainapp
+docker tag rafa-app mainapp.azurecr.io/mainapp
+docker push mainapp.azurecr.io/mainapp
+az acr update -n dentsureg --admin-enabled true
+
+
