@@ -48,7 +48,7 @@ def get_deops(n):
 def get_solcast_forecast():
     # Read in the current set of historical forecasts
     df_old = pd.read_csv('Data/historical_forecast.csv', sep=',')
-    # Log into solcast and get
+    # Log into solcast and get a 7 day weather forecast
     creds = {'api_key': '1h3MqOk4r2Vb2X_9uexzYFkUVWzBHz6w'}
     solcast_url = 'https://api.solcast.com.au/weather_sites/9d7c-6430-2d41-5c4b/forecasts?format=json'
     # This while loop is necessary because my home network is having DNS errors - it usually works on the second try
@@ -59,27 +59,40 @@ def get_solcast_forecast():
             break
         except:
             continue
+    # Extract data from json format and clean into a new dataframe
     forecast_json = response.json()
     forecast_df = pd.DataFrame(list(forecast_json.values())[0])
+    # concatenate the original dataframe with the new one and write back to the same csv file, so that it is updated
+    # with new values, getting rid of duplicates first
     df_new = pd.concat([df_old, forecast_df], ignore_index=True)
     df_new.drop_duplicates(subset='period_end', keep='last', inplace=True, ignore_index=True)
     df_new.to_csv('./Data/historical_forecast.csv', sep=',', index=False)
+    # All of the data in this function so far is in Solcast format so I have written another function (below) that
+    # cleans it into the format we need for this app
     df_new = clean_solcast_data(df_new)
+    # Ensure timestamp is in correct date format
     df_new['timestamp'] = pd.to_datetime(df_new['timestamp'], utc=True)
     return df_new
 
 
+# A function used in several places to merge two dataframes together and keep in the correct format for this app
 def merge_data_frames(df1, df2):
+    # ensure that both dataframes have the same date format
     df1['timestamp'] = pd.to_datetime(df1['timestamp'], utc=True).dt.tz_localize(None)
     df2['timestamp'] = pd.to_datetime(df2['timestamp'], utc=True).dt.tz_localize(None)
+    # Use pandas to perform a merge with indicator set to True, so that duplicate columns get a suffix of _x or _y
     new_df = df1.merge(df2, on='timestamp', how='left', indicator=True)
+    # Uses the Numpy where function that takes PB_obs_x, created in the merge, and if it is NaN, replaces it with
+    # PV_obs_y, else leaves it as PV_obs_x
     new_df.PV_obs_x = np.where(new_df.PV_obs_x.isna(),
                                new_df.PV_obs_y,
                                new_df.PV_obs_x
                                )
+    # Loop through the columns and delete any that end with _y
     for column in new_df.columns:
         if column.endswith('_y'):
             new_df.drop(column, axis=1, inplace=True)
+    # Drop the merge column, rename the columns and reindex the dataframe
     new_df.drop(['_merge'], axis=1, inplace=True)
     new_df.columns = ['timestamp', 'PV_obs', 'GHI', 'DNI', 'DHI', 'SA', 'SZ', 'CO', 'Temp']
     new_df = new_df.reindex(['timestamp', 'PV_obs', 'GHI', 'DNI', 'DHI', 'SA', 'SZ', 'CO', 'Temp'],
@@ -87,10 +100,17 @@ def merge_data_frames(df1, df2):
     return new_df
 
 
+# This is the function that calls on the TIM api to make a prediction. It takes three arguments - a dataframe,
+# a boolean indicator of whether you wish it to return a model or a dataframe, and md_h which is the model horizon to
+# forecast
 def build_model(df, indicator, md_h):
+    # Used to ensure that 40% of the dataframe is used for backtesting, so that metrics can be returned
     backnum = int(len(df) * .4)
+
+    # ensures that the forecast horizon is in integer format
     md_h = int(md_h)
-    # --------------------------------------------------------
+
+    # Set up the connection to the TIM API
     with open('credentials.json') as f:
         credentials_json = json.load(f)  # loading the credentials from credentials.json
 
@@ -117,7 +137,8 @@ def build_model(df, indicator, md_h):
             break
         except:
             continue
-    # --------------------------------------------------------
+    # The configuration settings for TIM to work - these are the minimal settings needed as in most cases TIM can
+    # handle the other settings automatically - I have found that there is no advantage in using the other settings
     configuration_backtest = {
         "usage": {
             "predictionTo": {
@@ -127,7 +148,7 @@ def build_model(df, indicator, md_h):
             "backtestLength": backnum,
             "modelQuality": [{'day': i, 'quality': 'High'} for i in range(0, 6)]
         },
-        "maxModelComplexity": 10,
+        "maxModelComplexity": 50,
         "predictionIntervals": {
             "confidenceLevel": 50
         },
@@ -141,11 +162,14 @@ def build_model(df, indicator, md_h):
     # but not the first
     while True:
         try:
+            # Passes the dataframe and configuration to TIM and returns a model
             model = api_client.prediction_build_model_predict(df, configuration_backtest)
             break
         except:
             continue
-
+    # If in the function variables the indicator is set to False, then return a dataframe, else return a TIM model -
+    # this was originally created to be used by the process_missing_values function below but is now used in
+    # production to save the predictions as a dataframe which simplifies communication between the containers
     if not indicator:
         df = model.prediction.reset_index()
         df.columns = ['timestamp', 'PV_obs']
@@ -156,6 +180,7 @@ def build_model(df, indicator, md_h):
 
 
 def clean_solcast_data(df):
+    # This function uses Pandas to transform the data from Solcast format to the format needed in the rest of the app
     new_cols = ['timestamp', 'PV_obs', 'GHI', 'DNI', 'DHI', 'SA', 'SZ', 'CO', 'Temp']
     df.drop(['ghi90', 'ghi10', 'ebh', 'dni10', 'dni90', 'period'], axis=1, inplace=True)
     df['PV_obs'] = np.nan
@@ -167,6 +192,11 @@ def clean_solcast_data(df):
     df = df.reset_index(drop=True)
     df['timestamp'] = pd.to_datetime(df['timestamp'], utc=True)
     return df
+
+# The following functions were used to originally iteratively fill in the missing values in the raw data from Keele -
+# however, as this process took over ten minutes to run once I had a configuration that worked I saved the results as
+# a CSV file (Keele_Historical_Clean.csv) and now just load that in at the start - these might be needed if a new
+# site with missing data was to be set up, hence I have left them here commented out
 
 # def get_missing_index(df):
 #     missing = pd.isna(df.PV_obs)

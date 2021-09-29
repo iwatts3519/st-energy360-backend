@@ -47,6 +47,7 @@ model1 = hf.build_model(complete_df, False, complete_df['PV_obs'].isna().sum())
 # compare with actuals to check accuracy and later will use to create an accuracy dataframe
 hp_df = pd.read_csv('./Data/historical_predictions.csv', parse_dates=['timestamp'], dayfirst=True)
 hp_df['timestamp'] = hp_df['timestamp'].astype('datetime64[ns]')
+# Ignore index set to true here allows us to extract the correct part of the frame to send to the front end
 model1 = pd.concat([model1, hp_df], ignore_index=True)
 model1.drop_duplicates(subset='timestamp', inplace=True, keep='first', ignore_index=True)
 model1.sort_values(by='timestamp', inplace=True, axis=0)
@@ -54,7 +55,9 @@ model1.to_csv('./Data/historical_predictions.csv', sep=',', index=False)
 
 # This saves the last 168 predictions into a csv file (1 weeks worth) and is ready to be uploaded to Microsoft Azure
 # Blob Storage
-model2 = model1.tail(168)
+last_num = model1[-1:].index.tolist()[0]
+print(last_num)
+model2 = model1.tail(last_num + 1).head(168)
 model2.to_csv('./Data/new_predictions.csv', index=False)
 
 # The accuracy dataframe is created using the predictions from the model and the original actuals from DEOPS and

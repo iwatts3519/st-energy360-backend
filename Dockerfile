@@ -25,5 +25,5 @@ RUN pip install -r requirements2.txt
 # Copy Files to container image
 COPY . .
 # start app
-CMD ["python", "index.py"]
+CMD ["python", "keele_data.py"]
 
