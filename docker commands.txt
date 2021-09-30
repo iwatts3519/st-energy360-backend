@@ -1,8 +1,9 @@
-docker build -t rafa-app .
 az login
 az acr login --name mainapp
-docker tag rafa-app mainapp.azurecr.io/mainapp
+az acr update -n mainapp --admin-enabled true
+docker build -t rafa-backend .
+docker tag rafa-backend mainapp.azurecr.io/mainapp
 docker push mainapp.azurecr.io/mainapp
-az acr update -n dentsureg --admin-enabled true
-
-
+az acr task create --name stenergy-backend --registry mainapp --cmd mainapp.azurecr.io/mainapp --schedule "0 4 * * *" --context /dev/null
+az acr task show --name stenergy-backend --registry mainapp --output table
+az acr task run --name stenergy-backend --registry mainapp
