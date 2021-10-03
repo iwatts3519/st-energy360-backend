@@ -15,7 +15,7 @@ def get_deops(n):
 
     # Using the above variables log into  DEOPS and retrieve the data
     auth123 = ('iwatts', 'Iwatts371!')
-    headers = {'sp': 'energykit', 'apikey': '45d8296f-aca7-46e7-888d-bd87f6e8e150'}
+    headers = {'sp': 'energykit', 'apikey': '0d4b723b-0f0b-4705-9368-a46ffa76477f'}
     # This while loop is necessary because my home network is having DNS errors - it usually works on the second try
     # but not the first
     while True:
