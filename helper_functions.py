@@ -35,8 +35,15 @@ def get_deops(n):
     df.value = df.value / 1000
     # Rename the columns to match other data frames used within the app
     df.rename(columns={'value': 'PV_obs'}, inplace=True)
-    # Filter the dataframe to only use occurences on the hour as DEOPS gives data at 15 minute intervals
-    df = df[2:-1]
+    # Filter the dataframe to only use occurences on the hour as DEOPS gives data at 15 minute intervals,
+    # by first iterating over the first rows that do not have minutes equal to 0 and dropping them, and then using
+    # Pandas groupby to aggregate each hour into one row
+    for row in df.itertuples():
+        if row[1].minute != 0:
+            df.drop(row[0], inplace=True)
+            continue
+        else:
+            break
     df = df.reset_index()
     agg_dict = {'timestamp': 'first', 'PV_obs': 'sum'}
     df = df.groupby(df.index // 4).agg(agg_dict)
@@ -164,6 +171,7 @@ def clean_solcast_data(df):
     df['timestamp'] = pd.to_datetime(df['timestamp'], utc=True)
     return df
 
+
 # The following functions were used to originally iteratively fill in the missing values in the raw data from Keele -
 # however, as this process took over ten minutes to run once I had a configuration that worked I saved the results as
 # a CSV file (Keele_Historical_Clean.csv) and now just load that in at the start - these might be needed if a new
@@ -224,3 +232,5 @@ def clean_solcast_data(df):
 #         ['timestamp', 'PV_obs', 'GHI', 'DNI', 'DHI', 'SA', 'SZ', 'CO', 'Temp'],
 #         axis=1)
 #     return solcast_historical_df
+
+deops = get_deops(7)
