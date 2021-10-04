@@ -35,7 +35,7 @@ complete_df = pd.concat([keele_df, forecast_df], ignore_index=True)
 # complete_df['timestamp'] = pd.to_datetime(complete_df['timestamp'], utc=True).dt.tz_localize(None)
 complete_df.drop_duplicates(subset='timestamp', keep='first', inplace=True, ignore_index=True)
 complete_df['PV_obs'] = round(complete_df['PV_obs'], 2)
-complete_df.sort_values(by=['timestamp'])
+complete_df.sort_values(by=['timestamp'], inplace=True)
 # complete_df.drop_duplicates(subset='timestamp', keep='first', inplace=True, ignore_index=True)
 # complete_df_dd.to_csv('./Data/forTimSTudio.csv', index=False)
 
