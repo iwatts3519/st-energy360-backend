@@ -15,7 +15,7 @@ def get_deops(n):
 
     # Using the above variables log into  DEOPS and retrieve the data
     auth123 = ('iwatts', 'Iwatts371!')
-    headers = {'sp': 'energykit', 'apikey': '0d4b723b-0f0b-4705-9368-a46ffa76477f'}
+    headers = {'sp': 'energykit', 'apikey': '7edcd81d-f4fc-43ca-9d60-e7477ebcf0f1'}
     # This while loop is necessary because my home network is having DNS errors - it usually works on the second try
     # but not the first
     while True:
@@ -41,7 +41,10 @@ def get_deops(n):
     # Rename the columns to match other data frames used within the app
     df.rename(columns={'value': 'PV_obs'}, inplace=True)
     # Filter the dataframe to only use occurences on the hour as DEOPS gives data at 15 minute intervals
-    df = df[df['timestamp'].dt.minute == 0]
+    df = df[2:-1]
+    df = df.reset_index()
+    agg_dict = {'timestamp': 'first', 'PV_obs': 'sum'}
+    df = df.groupby(df.index // 4).agg(agg_dict)
     return df
 
 
@@ -193,6 +196,7 @@ def clean_solcast_data(df):
     df['timestamp'] = pd.to_datetime(df['timestamp'], utc=True)
     return df
 
+
 # The following functions were used to originally iteratively fill in the missing values in the raw data from Keele -
 # however, as this process took over ten minutes to run once I had a configuration that worked I saved the results as
 # a CSV file (Keele_Historical_Clean.csv) and now just load that in at the start - these might be needed if a new
@@ -217,7 +221,8 @@ def clean_solcast_data(df):
 #     print(f'End is {end}')
 #     print(f'End minus Start is {end - start}')
 #     return end, end - start
-
+#
+#
 # def process_missing_values(df):
 #     df_len = len(df)
 #     end, prediction = get_missing_index(df)
@@ -252,3 +257,5 @@ def clean_solcast_data(df):
 #         ['timestamp', 'PV_obs', 'GHI', 'DNI', 'DHI', 'SA', 'SZ', 'CO', 'Temp'],
 #         axis=1)
 #     return solcast_historical_df
+
+deops_df = get_deops(14)

@@ -69,6 +69,7 @@ model2.to_csv('./Data/new_predictions.csv', index=False)
 acc_df = deops_df.merge(model1, how='left', on='timestamp')
 acc_df.columns = ['timestamp', 'Actual', 'Prediction']
 acc_df.dropna(inplace=True)
+acc_df = acc_df.tail(72)
 acc_df.to_csv('./Data/accuracy_frame.csv', index=False)
 
 # Finally we can upload the files to the Azure Blob Storage Account, which will be read by the frontend of the app
