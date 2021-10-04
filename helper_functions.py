@@ -16,19 +16,14 @@ def get_deops(n):
     # Using the above variables log into  DEOPS and retrieve the data
     auth123 = ('iwatts', 'Iwatts371!')
     headers = {'sp': 'energykit', 'apikey': '7edcd81d-f4fc-43ca-9d60-e7477ebcf0f1'}
-    # This while loop is necessary because my home network is having DNS errors - it usually works on the second try
-    # but not the first
-    while True:
-        try:
-            deops = requests.get(
-                f'https://energykit.deop.siemens.com/assets/v0.1/rawTimeseriesByFeedId/5e9f1f46143d340018ed853f?limit'
-                f'=1344&since={n_days_past}&until={now}',
-                headers=headers, auth=auth123)
-            break
-        except:
-            continue
-            # The data is returned in json format and then the values part of the json file is converted into a
-            # dataframe
+
+    deops = requests.get(
+        f'https://energykit.deop.siemens.com/assets/v0.1/rawTimeseriesByFeedId/5e9f1f46143d340018ed853f?limit'
+        f'=1344&since={n_days_past}&until={now}',
+        headers=headers, auth=auth123)
+
+    # The data is returned in json format and then the values part of the json file is converted into a
+    # dataframe
     values = deops.json()
     df = pd.DataFrame(values['data'])
     # Ensure the dataframe has the correct date-time format
@@ -54,14 +49,9 @@ def get_solcast_forecast():
     # Log into solcast and get a 7 day weather forecast
     creds = {'api_key': '1h3MqOk4r2Vb2X_9uexzYFkUVWzBHz6w'}
     solcast_url = 'https://api.solcast.com.au/weather_sites/9d7c-6430-2d41-5c4b/forecasts?format=json'
-    # This while loop is necessary because my home network is having DNS errors - it usually works on the second try
-    # but not the first
-    while True:
-        try:
-            response = requests.get(solcast_url, params=creds)
-            break
-        except:
-            continue
+
+    response = requests.get(solcast_url, params=creds)
+
     # Extract data from json format and clean into a new dataframe
     forecast_json = response.json()
     forecast_df = pd.DataFrame(list(forecast_json.values())[0])
@@ -119,27 +109,10 @@ def build_model(df, indicator, md_h):
 
     TIM_URL = 'https://timws.tangent.works/v4/api'  # URL to which the requests are sent
 
-    SAVE_JSON = False  # if True - JSON requests and responses are saved to JSON_SAVING_FOLDER
-    JSON_SAVING_FOLDER = './logs/'  # folder where the requests and responses are stored
+    credentials = tim_client.Credentials(credentials_json['license_key'], credentials_json['email'],
+                                         credentials_json['password'], tim_url=TIM_URL)
+    api_client = tim_client.ApiClient(credentials)
 
-    LOGGING_LEVEL = 'INFO'
-
-    level = logging.getLevelName(LOGGING_LEVEL)
-    logging.basicConfig(level=level,
-                        format='[%(levelname)s] %(asctime)s - %(name)s:%(funcName)s:%(lineno)s - %(message)s')
-    logger = logging.getLogger(__name__)
-    # This while loop is necessary because my home network is having DNS errors - it usually works on the second try
-    # but not the first
-    while True:
-        try:
-            credentials = tim_client.Credentials(credentials_json['license_key'], credentials_json['email'],
-                                                 credentials_json['password'], tim_url=TIM_URL)
-            api_client = tim_client.ApiClient(credentials)
-            api_client.save_json = SAVE_JSON
-            api_client.json_saving_folder_path = JSON_SAVING_FOLDER
-            break
-        except:
-            continue
     # The configuration settings for TIM to work - these are the minimal settings needed as in most cases TIM can
     # handle the other settings automatically - I have found that there is no advantage in using the other settings
     configuration_backtest = {
@@ -161,15 +134,10 @@ def build_model(df, indicator, md_h):
             'returnAggregatedPredictions': True
         },
     }
-    # This while loop is necessary because my home network is having DNS errors - it usually works on the second try
-    # but not the first
-    while True:
-        try:
-            # Passes the dataframe and configuration to TIM and returns a model
-            model = api_client.prediction_build_model_predict(df, configuration_backtest)
-            break
-        except:
-            continue
+
+    # Passes the dataframe and configuration to TIM and returns a model
+    model = api_client.prediction_build_model_predict(df, configuration_backtest)
+
     # If in the function variables the indicator is set to False, then return a dataframe, else return a TIM model -
     # this was originally created to be used by the process_missing_values function below but is now used in
     # production to save the predictions as a dataframe which simplifies communication between the containers
