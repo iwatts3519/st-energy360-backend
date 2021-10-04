@@ -171,7 +171,6 @@ def clean_solcast_data(df):
     df['timestamp'] = pd.to_datetime(df['timestamp'], utc=True)
     return df
 
-
 # The following functions were used to originally iteratively fill in the missing values in the raw data from Keele -
 # however, as this process took over ten minutes to run once I had a configuration that worked I saved the results as
 # a CSV file (Keele_Historical_Clean.csv) and now just load that in at the start - these might be needed if a new
@@ -232,5 +231,3 @@ def clean_solcast_data(df):
 #         ['timestamp', 'PV_obs', 'GHI', 'DNI', 'DHI', 'SA', 'SZ', 'CO', 'Temp'],
 #         axis=1)
 #     return solcast_historical_df
-
-deops = get_deops(7)
