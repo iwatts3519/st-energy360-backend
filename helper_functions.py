@@ -1,7 +1,6 @@
 import pandas as pd
 import json
 import numpy as np
-import logging
 import requests
 import tim_client
 from datetime import datetime, timedelta
