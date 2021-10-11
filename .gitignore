@@ -6,3 +6,5 @@
 /.idea/
 /deops.json
 /solcast.json
+/config.json
+/credentials.json
