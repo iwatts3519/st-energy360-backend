@@ -1,8 +1,0 @@
-{
-    "CONNECTIONSTRING" : "DefaultEndpointsProtocol=https;AccountName=stenergystorage;AccountKey=hjsyKTjVgz/UxbH5Tt1G30AT7wl/3w+48w5JZ7TEJiihl091NHQyHPyUOQYcTyhvN2ajc2DEOSrXjh7ejnUNYg==;EndpointSuffix=core.windows.net",
-    "LOCALFILENAME" : "./Data/new_predictions.csv",
-    "LOCALFILENAMEACC" : "./Data/accuracy_frame.csv",
-    "CONTAINERNAME" : "backendstorage",
-    "BLOBNAME" : "new_predictions.csv",
-    "BLOBNAMEACC" : "accuracy_frame.csv"
-}
