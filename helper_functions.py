@@ -12,14 +12,28 @@ def get_deops(n):
     now = datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ")
     n_days_past = (datetime.now() - timedelta(days=n)).strftime("%Y-%m-%dT%H:%M:%SZ")
 
-    # Using the above variables log into  DEOPS and retrieve the data
-    auth123 = ('iwatts', 'Iwatts371!')
-    headers = {'sp': 'energykit', 'apikey': '7edcd81d-f4fc-43ca-9d60-e7477ebcf0f1'}
+    # Use the requests library to log in to the DEOPS API
+    with open('deops.json', 'r') as f:
+        deops_json = json.load(f)  # loading the credentials from credentials.json
 
+    url = "https://energykit.deop.siemens.com/auth/v0.1/login"
+
+    payload = json.dumps({
+        "password": deops_json['password']
+    })
+    headers = {
+        'sp': deops_json['sp'],
+        'username': deops_json['username'],
+        'Content-Type': 'application/json',
+        'Cookie': deops_json['Cookie']
+    }
+    response = requests.post(url, headers=headers, data=payload)
+    deops_json["Cookie"] = f"{response.cookies.get('apikey')}; sp=energykit"
     deops = requests.get(
         f'https://energykit.deop.siemens.com/assets/v0.1/rawTimeseriesByFeedId/5e9f1f46143d340018ed853f?limit'
         f'=1344&since={n_days_past}&until={now}',
-        headers=headers, auth=auth123)
+        headers={'sp': deops_json['sp'], 'apikey': response.cookies.get('apikey')},
+        auth=(deops_json['username'], deops_json['password']))
 
     # The data is returned in json format and then the values part of the json file is converted into a
     # dataframe
@@ -46,6 +60,9 @@ def get_deops(n):
     df = df.reset_index()
     agg_dict = {'timestamp': 'first', 'PV_obs': 'sum'}
     df = df.groupby(df.index // 4).agg(agg_dict)
+    # Make sure the new api is updated in the json file
+    with open('deops.json', 'w') as f:
+        json.dump(deops_json, f)
     return df
 
 
@@ -53,10 +70,13 @@ def get_solcast_forecast():
     # Read in the current set of historical forecasts
     df_old = pd.read_csv('Data/historical_forecast.csv', sep=',')
     # Log into solcast and get a 7 day weather forecast
-    creds = {'api_key': '1h3MqOk4r2Vb2X_9uexzYFkUVWzBHz6w'}
-    solcast_url = 'https://api.solcast.com.au/weather_sites/9d7c-6430-2d41-5c4b/forecasts?format=json'
 
-    response = requests.get(solcast_url, params=creds)
+    with open('solcast.json', 'r') as f:
+        solcast = json.load(f)
+
+    creds = solcast['api_key']
+    solcast_url = solcast['solcast_url']
+    response = requests.get(solcast_url, params={'api_key': creds})
 
     # Extract data from json format and clean into a new dataframe
     forecast_json = response.json()
@@ -170,6 +190,7 @@ def clean_solcast_data(df):
     df['timestamp'] = pd.to_datetime(df['timestamp'], utc=True)
     return df
 
+
 # The following functions were used to originally iteratively fill in the missing values in the raw data from Keele -
 # however, as this process took over ten minutes to run once I had a configuration that worked I saved the results as
 # a CSV file (Keele_Historical_Clean.csv) and now just load that in at the start - these might be needed if a new
@@ -230,3 +251,5 @@ def clean_solcast_data(df):
 #         ['timestamp', 'PV_obs', 'GHI', 'DNI', 'DHI', 'SA', 'SZ', 'CO', 'Temp'],
 #         axis=1)
 #     return solcast_historical_df
+
+deops = get_deops(7)
