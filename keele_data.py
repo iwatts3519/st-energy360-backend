@@ -67,10 +67,15 @@ model2.to_csv('./Data/new_predictions.csv', index=False)
 # The accuracy dataframe is created using the predictions from the model and the original actuals from DEOPS and
 # stores in a CSV file ready to be uploaded to Microsoft Azure Blob Storage
 acc_df = deops_df.merge(model1, how='left', on='timestamp')
+print(acc_df)
 acc_df.columns = ['timestamp', 'Actual', 'Prediction']
+print(acc_df)
 acc_df.dropna(inplace=True)
+print(acc_df)
 acc_df = acc_df.tail(24)
+print(acc_df)
 acc_df.to_csv('./Data/accuracy_frame.csv', index=False)
+print(acc_df)
 
 # Finally we can upload the files to the Azure Blob Storage Account, which will be read by the frontend of the app
 # and used to create the dashboard.
